@@ -33,11 +33,11 @@ _RE_ACCIDENT = re.compile(
     r"\bACC\b|accident|cabin\s*damage|engine\s*fail|breakdown|break\s*down",
     re.IGNORECASE,
 )
-_RE_DH = re.compile(r"^\s*DH\s*$|\(DH\)", re.IGNORECASE)
-_RE_DP = re.compile(r"^\s*DP\s*$|\(DP\)", re.IGNORECASE)
+_RE_DH = re.compile(r"^\s*DH\d*\s*$|\(DH\)", re.IGNORECASE)
+_RE_DP = re.compile(r"^\s*DP\d*\s*$|\(DP\)", re.IGNORECASE)
 _RE_ULP = re.compile(r"^\s*ULP\b", re.IGNORECASE)
 _RE_TNST = re.compile(r"^\s*TNST\s*$", re.IGNORECASE)
-_RE_RM = re.compile(r"^\s*RM\s*$", re.IGNORECASE)
+_RE_RM = re.compile(r"^\s*RM\d*\s*$", re.IGNORECASE)         # RM or RM1 = Repair & Maintenance
 _RE_LRM = re.compile(r"^\s*LRM\b", re.IGNORECASE)
 _RE_LP = re.compile(r"^\s*LP[A-Z]*\b", re.IGNORECASE)          # LPD, LPB, LPOCL, LP OCL, etc.
 _RE_MT = re.compile(r"^\s*MT[\s_]*[A-Z]*\b", re.IGNORECASE)    # MTO, MTOCL, MT OCL, MT ARUHA
@@ -55,7 +55,7 @@ STATUS_LABELS = {
     "DH": "Driver Home",
     "DP": "Driver Problem",
     "LP": "Loading Point",
-    "RM": "Raw Material Loaded",
+    "RM": "Repair & Maintenance",
     "LRM": "Loading Raw Material",
     "TNST": "In Transit",
     "ULP": "Unloading Point",
@@ -70,8 +70,8 @@ STATUS_COLORS = {
     "ULP": "#16a34a",
     "TNST": "#eab308",
     "LP": "#f59e0b",
-    "RM": "#84cc16",
-    "LRM": "#a3e635",
+    "RM": "#a855f7",        # purple — unproductive (repair)
+    "LRM": "#a3e635",       # light green — productive (loading raw material)
     "MT": "#fbbf24",
     "DH": "#ef4444",
     "DP": "#dc2626",
@@ -146,8 +146,9 @@ def add_status_column(df: pd.DataFrame) -> pd.DataFrame:
 # Trip counting and utilization
 # ----------------------------------------------------------------------
 
-PRODUCTIVE_STATES = {"TRIP", "ULP", "TNST", "LP", "MT", "RM", "LRM"}
-EXCLUDED_FROM_DENOM = {"NO_DATA", "ACCIDENT"}
+PRODUCTIVE_STATES = {"TRIP", "ULP", "TNST", "LP", "MT", "LRM"}
+# Days excluded from the working-day denominator entirely (truck isn't "at work" on these days):
+EXCLUDED_FROM_DENOM = {"NO_DATA", "ACCIDENT", "DP", "RM"}
 
 
 def trip_count_per_vehicle(df: pd.DataFrame) -> pd.Series:
@@ -222,10 +223,19 @@ def vehicle_summary(df: pd.DataFrame) -> pd.DataFrame:
     # Blank out utilization for accident vehicles
     pivot.loc[pivot["is_accident_vehicle"], "utilization_pct"] = None
 
+    # Average days per trip (per vehicle): working_days / trips
+    # working_days = active_days (already excludes NO_DATA, ACCIDENT, DP, RM)
+    # Use manual trip count if available, else computed
+    trip_for_avg = pivot["trips_manual"].fillna(pivot["trips_computed"])
+    pivot["avg_days_per_trip"] = (
+        pivot["active_days"] / trip_for_avg.replace(0, pd.NA)
+    ).round(2)
+
     ordered = (
         ["vehicle", "contractor", "group", "is_accident_vehicle", "last_location"]
         + STATUS_ORDER
-        + ["trips_computed", "trips_manual", "active_days", "productive_days", "utilization_pct"]
+        + ["trips_computed", "trips_manual", "active_days", "productive_days",
+           "utilization_pct", "avg_days_per_trip"]
     )
     pivot = pivot[ordered]
     return pivot.sort_values(
@@ -312,7 +322,8 @@ def compute_kpis(df: pd.DataFrame) -> Dict:
             "total_vehicles": 0, "active_trips": 0, "drivers_home": 0,
             "drivers_problem": 0, "fleet_util_pct": 0.0,
             "accident_vehicles": 0, "latest_date": None,
-            "total_trips_month": 0,
+            "total_trips_month": 0, "avg_days_per_trip": 0.0,
+            "working_days_total": 0,
         }
     df = df if "status" in df.columns else add_status_column(df)
     latest_date = df["date"].max()
@@ -333,10 +344,18 @@ def compute_kpis(df: pd.DataFrame) -> Dict:
     else:
         fleet_util = 0.0
 
-    # Total trips: prefer manual count if available
+    # Total trips: only use manual if EVERY vehicle has a manual count; else use computed.
+    # This keeps the Total Trips KPI and Avg Days/Trip KPI consistent with each other.
     manual_total = df[df["manual_trip_count"].notna()].groupby("vehicle")["manual_trip_count"].max().sum()
     computed_total = int(df["is_highlighted"].sum())
-    total_trips_month = int(manual_total) if manual_total > 0 else computed_total
+    vehicles_in_view = df["vehicle"].unique()
+    vehicles_with_manual = df[df["manual_trip_count"].notna()]["vehicle"].unique()
+    all_have_manual = len(vehicles_with_manual) == len(vehicles_in_view) and manual_total > 0
+    total_trips_month = int(manual_total) if all_have_manual else computed_total
+
+    # Avg days per trip: working_days / total_trips (using the same trip count as above)
+    working_days = int((~df["status"].isin(EXCLUDED_FROM_DENOM)).sum())
+    avg_days_per_trip = round(working_days / total_trips_month, 2) if total_trips_month > 0 else 0.0
 
     return {
         "total_vehicles": total_vehicles,
@@ -347,6 +366,8 @@ def compute_kpis(df: pd.DataFrame) -> Dict:
         "accident_vehicles": accident_count,
         "latest_date": latest_date,
         "total_trips_month": total_trips_month,
+        "avg_days_per_trip": avg_days_per_trip,
+        "working_days_total": working_days,
     }
 
 
