@@ -220,20 +220,23 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-k1, k2, k3, k4, k5 = st.columns(5)
+k1, k2, k3, k4, k5, k6 = st.columns(6)
 with k1:
     st.markdown(kpi_card("Total trips", f"{kpis['total_trips_month']:,}", accent="green",
                          sub="highlighted cells = routes"), unsafe_allow_html=True)
 with k2:
+    st.markdown(kpi_card("Avg days / trip", kpis["avg_days_per_trip"], accent="blue",
+                         sub="working days ÷ trips"), unsafe_allow_html=True)
+with k3:
     st.markdown(kpi_card("Drivers home (latest)", kpis["drivers_home"], accent="red"),
                 unsafe_allow_html=True)
-with k3:
+with k4:
     st.markdown(kpi_card("Driver problems (latest)", kpis["drivers_problem"], accent="amber"),
                 unsafe_allow_html=True)
-with k4:
-    st.markdown(kpi_card("Fleet utilization", kpis["fleet_util_pct"], unit="%", accent="blue",
-                         sub="excl. accident vehicles"), unsafe_allow_html=True)
 with k5:
+    st.markdown(kpi_card("Fleet utilization", kpis["fleet_util_pct"], unit="%", accent="blue",
+                         sub="excl. accident, DP, R&M"), unsafe_allow_html=True)
+with k6:
     st.markdown(kpi_card("Accident vehicles", kpis["accident_vehicles"], accent="purple"),
                 unsafe_allow_html=True)
 
