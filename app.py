@@ -87,7 +87,14 @@ CSS = """
   [data-testid="stFileUploader"] section { background: #11141a; border: 1px dashed #2a3039; border-radius: 6px; }
   .stAlert { background: #11141a; border: 1px solid #1f2328; border-radius: 6px; }
 
-  #MainMenu, footer, header[data-testid="stHeader"] { visibility: hidden; }
+  /* Hide the footer only. Keep the header and main menu visible so users
+     can reopen the sidebar if they collapse it. */
+  footer { visibility: hidden; }
+
+  /* Style the header to blend with our dark theme */
+  header[data-testid="stHeader"] {
+    background: transparent;
+  }
 
   .note-box { background: #14181e; border-left: 3px solid #f59e0b; padding: 0.6rem 0.9rem; border-radius: 3px; color: #d1d5db; font-size: 0.85rem; margin: 0.5rem 0; }
   .note-box.info { border-left-color: #60a5fa; }
