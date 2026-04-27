@@ -144,6 +144,63 @@ def make_css(p: dict) -> str:
   section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {{ color: {p['h2']}; }}
   section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{ color: {p['text']}; }}
 
+  /* ---- Input widgets (selectbox, multiselect, number_input, text_input) ---- */
+  div[data-baseweb="select"] > div {{
+    background-color: {p['panel']} !important;
+    border-color: {p['border']} !important;
+    color: {p['text']} !important;
+  }}
+  div[data-baseweb="select"] span,
+  div[data-baseweb="select"] input {{
+    color: {p['text']} !important;
+  }}
+  div[data-baseweb="popover"] ul,
+  div[data-baseweb="popover"] li {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+  }}
+  div[data-baseweb="popover"] li:hover {{
+    background-color: {p['alert_bg']} !important;
+  }}
+  span[data-baseweb="tag"] {{
+    background-color: {p['accent_blue']} !important;
+    color: #ffffff !important;
+  }}
+  input[type="number"], input[type="text"],
+  div[data-baseweb="input"] input,
+  div[data-baseweb="base-input"] input {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+    border-color: {p['border']} !important;
+  }}
+  div[data-baseweb="input"], div[data-baseweb="base-input"] {{
+    background-color: {p['panel']} !important;
+    border-color: {p['border']} !important;
+  }}
+  button[data-testid="stNumberInputStepDown"],
+  button[data-testid="stNumberInputStepUp"] {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+    border-color: {p['border']} !important;
+  }}
+  div[data-baseweb="calendar"] {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+  }}
+  div[data-testid="stButton"] > button {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+    border: 1px solid {p['border']} !important;
+  }}
+  div[data-testid="stButton"] > button:hover {{
+    border-color: {p['accent_blue']} !important;
+    color: {p['accent_blue']} !important;
+  }}
+  label[data-baseweb="checkbox"] span,
+  label[data-baseweb="radio"] span {{
+    color: {p['text']} !important;
+  }}
+
   .stTabs [data-baseweb="tab-list"] {{ gap: 0; border-bottom: 1px solid {p['border']}; overflow-x: auto; }}
   .stTabs [data-baseweb="tab"] {{ background: transparent; color: {p['text_muted']}; font-weight: 500; padding: 0.65rem 1.1rem; border: none; border-bottom: 2px solid transparent; white-space: nowrap; }}
   .stTabs [aria-selected="true"] {{ color: {p['text']} !important; border-bottom: 2px solid {p['tab_active']} !important; background: transparent !important; }}
