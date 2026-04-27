@@ -36,73 +36,135 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-CSS = """
+# ==================================================================
+# Theme system — light by default, with toggle
+# ==================================================================
+
+if "theme" not in st.session_state:
+    st.session_state["theme"] = "light"
+
+
+def get_theme_palette(theme: str) -> dict:
+    if theme == "dark":
+        return {
+            "bg":            "#0b0d10",
+            "panel":         "#11141a",
+            "border":        "#1f2328",
+            "border_strong": "#2a3039",
+            "text":          "#f5f5f5",
+            "text_muted":    "#8b93a1",
+            "text_dim":      "#6b7280",
+            "h2":            "#e5e7eb",
+            "h3":            "#9aa3b2",
+            "sidebar_bg":    "#0f1216",
+            "tab_active":    "#f59e0b",
+            "alert_bg":      "#14181e",
+            "note_text":     "#d1d5db",
+            "accent_green":  "#22c55e",
+            "accent_red":    "#ef4444",
+            "accent_amber":  "#f59e0b",
+            "accent_blue":   "#60a5fa",
+            "accent_purple": "#a855f7",
+            "chart_bg":      "#0b0d10",
+            "chart_grid":    "#1f2328",
+            "chart_text":    "#d1d5db",
+            "chart_line":    "#60a5fa",
+        }
+    return {
+        "bg":            "#ffffff",
+        "panel":         "#ffffff",
+        "border":        "#e5e7eb",
+        "border_strong": "#cbd5e1",
+        "text":          "#111827",
+        "text_muted":    "#6b7280",
+        "text_dim":      "#9ca3af",
+        "h2":            "#1f2937",
+        "h3":            "#6b7280",
+        "sidebar_bg":    "#f9fafb",
+        "tab_active":    "#d97706",
+        "alert_bg":      "#f9fafb",
+        "note_text":     "#374151",
+        "accent_green":  "#15803d",
+        "accent_red":    "#b91c1c",
+        "accent_amber":  "#b45309",
+        "accent_blue":   "#1d4ed8",
+        "accent_purple": "#6d28d9",
+        "chart_bg":      "#ffffff",
+        "chart_grid":    "#e5e7eb",
+        "chart_text":    "#374151",
+        "chart_line":    "#1d4ed8",
+    }
+
+
+def make_css(p: dict) -> str:
+    return f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 
-  html, body, [class*="css"] { font-family: 'IBM Plex Sans', -apple-system, sans-serif !important; }
-  .stApp { background: #0b0d10; }
+  html, body, [class*="css"] {{ font-family: 'IBM Plex Sans', -apple-system, sans-serif !important; }}
+  .stApp {{ background: {p['bg']}; }}
 
-  .block-container {
+  .block-container {{
     padding-top: 1.75rem;
     padding-bottom: 4rem;
     max-width: 1500px;
-  }
+  }}
 
-  h1, h2, h3, h4 { font-family: 'IBM Plex Sans', sans-serif !important; letter-spacing: -0.01em; color: #f5f5f5; }
-  h1 {
+  h1, h2, h3, h4 {{ font-family: 'IBM Plex Sans', sans-serif !important; letter-spacing: -0.01em; color: {p['text']}; }}
+  h1 {{
     font-weight: 700;
     font-size: 1.9rem !important;
-    border-bottom: 1px solid #1f2328;
+    border-bottom: 1px solid {p['border']};
     padding-bottom: 0.75rem;
     margin-bottom: 0.25rem !important;
-  }
-  h2 { font-weight: 600; font-size: 1.15rem !important; margin-top: 1.8rem !important; color: #e5e7eb; }
-  h3 {
-    font-weight: 500; font-size: 0.85rem !important; color: #9aa3b2;
+  }}
+  h2 {{ font-weight: 600; font-size: 1.15rem !important; margin-top: 1.8rem !important; color: {p['h2']}; }}
+  h3 {{
+    font-weight: 500; font-size: 0.85rem !important; color: {p['h3']};
     text-transform: uppercase; letter-spacing: 0.08em;
     margin-top: 1rem !important; margin-bottom: 0.5rem !important;
-  }
+  }}
 
-  .page-subtitle { color: #8b93a1; font-size: 0.9rem; margin-bottom: 1.5rem; font-weight: 400; }
+  p, span, div, label {{ color: {p['text']}; }}
 
-  .kpi-card { background: #11141a; border: 1px solid #1f2328; border-radius: 6px; padding: 1.1rem 1.25rem; height: 100%; }
-  .kpi-label { color: #8b93a1; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
-  .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: #f5f5f5; line-height: 1; }
-  .kpi-unit { color: #8b93a1; font-size: 0.95rem; font-weight: 400; margin-left: 0.25rem; }
-  .kpi-sub { color: #6b7280; font-size: 0.75rem; margin-top: 0.4rem; }
-  .kpi-card.accent-green .kpi-value { color: #22c55e; }
-  .kpi-card.accent-red   .kpi-value { color: #ef4444; }
-  .kpi-card.accent-amber .kpi-value { color: #f59e0b; }
-  .kpi-card.accent-blue  .kpi-value { color: #60a5fa; }
-  .kpi-card.accent-purple .kpi-value { color: #a855f7; }
+  .page-subtitle {{ color: {p['text_muted']}; font-size: 0.9rem; margin-bottom: 1.5rem; font-weight: 400; }}
 
-  section[data-testid="stSidebar"] { background: #0f1216; border-right: 1px solid #1f2328; }
+  .kpi-card {{ background: {p['panel']}; border: 1px solid {p['border']}; border-radius: 6px; padding: 1.1rem 1.25rem; height: 100%; }}
+  .kpi-label {{ color: {p['text_muted']}; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }}
+  .kpi-value {{ font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: {p['text']}; line-height: 1; }}
+  .kpi-unit {{ color: {p['text_muted']}; font-size: 0.95rem; font-weight: 400; margin-left: 0.25rem; }}
+  .kpi-sub {{ color: {p['text_dim']}; font-size: 0.75rem; margin-top: 0.4rem; }}
+  .kpi-card.accent-green .kpi-value {{ color: {p['accent_green']}; }}
+  .kpi-card.accent-red   .kpi-value {{ color: {p['accent_red']}; }}
+  .kpi-card.accent-amber .kpi-value {{ color: {p['accent_amber']}; }}
+  .kpi-card.accent-blue  .kpi-value {{ color: {p['accent_blue']}; }}
+  .kpi-card.accent-purple .kpi-value {{ color: {p['accent_purple']}; }}
 
-  .stTabs [data-baseweb="tab-list"] { gap: 0; border-bottom: 1px solid #1f2328; overflow-x: auto; }
-  .stTabs [data-baseweb="tab"] { background: transparent; color: #8b93a1; font-weight: 500; padding: 0.65rem 1.1rem; border: none; border-bottom: 2px solid transparent; white-space: nowrap; }
-  .stTabs [aria-selected="true"] { color: #f5f5f5 !important; border-bottom: 2px solid #f59e0b !important; background: transparent !important; }
+  section[data-testid="stSidebar"] {{ background: {p['sidebar_bg']}; border-right: 1px solid {p['border']}; }}
+  section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {{ color: {p['h2']}; }}
+  section[data-testid="stSidebar"] label, section[data-testid="stSidebar"] p {{ color: {p['text']}; }}
 
-  .stDataFrame { border: 1px solid #1f2328; border-radius: 6px; }
-  [data-testid="stFileUploader"] section { background: #11141a; border: 1px dashed #2a3039; border-radius: 6px; }
-  .stAlert { background: #11141a; border: 1px solid #1f2328; border-radius: 6px; }
+  .stTabs [data-baseweb="tab-list"] {{ gap: 0; border-bottom: 1px solid {p['border']}; overflow-x: auto; }}
+  .stTabs [data-baseweb="tab"] {{ background: transparent; color: {p['text_muted']}; font-weight: 500; padding: 0.65rem 1.1rem; border: none; border-bottom: 2px solid transparent; white-space: nowrap; }}
+  .stTabs [aria-selected="true"] {{ color: {p['text']} !important; border-bottom: 2px solid {p['tab_active']} !important; background: transparent !important; }}
 
-  /* Hide the footer only. Keep the header and main menu visible so users
-     can reopen the sidebar if they collapse it. */
-  footer { visibility: hidden; }
+  .stDataFrame {{ border: 1px solid {p['border']}; border-radius: 6px; }}
+  [data-testid="stFileUploader"] section {{ background: {p['panel']}; border: 1px dashed {p['border_strong']}; border-radius: 6px; }}
+  .stAlert {{ background: {p['alert_bg']}; border: 1px solid {p['border']}; border-radius: 6px; }}
 
-  /* Style the header to blend with our dark theme */
-  header[data-testid="stHeader"] {
-    background: transparent;
-  }
+  footer {{ visibility: hidden; }}
+  header[data-testid="stHeader"] {{ background: transparent; }}
 
-  .note-box { background: #14181e; border-left: 3px solid #f59e0b; padding: 0.6rem 0.9rem; border-radius: 3px; color: #d1d5db; font-size: 0.85rem; margin: 0.5rem 0; }
-  .note-box.info { border-left-color: #60a5fa; }
-  .note-box.success { border-left-color: #22c55e; }
-  .note-box.danger { border-left-color: #ef4444; }
+  .note-box {{ background: {p['alert_bg']}; border: 1px solid {p['border']}; border-left: 3px solid {p['accent_amber']}; padding: 0.6rem 0.9rem; border-radius: 3px; color: {p['note_text']}; font-size: 0.85rem; margin: 0.5rem 0; }}
+  .note-box.info    {{ border-left-color: {p['accent_blue']}; }}
+  .note-box.success {{ border-left-color: {p['accent_green']}; }}
+  .note-box.danger  {{ border-left-color: {p['accent_red']}; }}
 </style>
 """
-st.markdown(CSS, unsafe_allow_html=True)
+
+
+PALETTE = get_theme_palette(st.session_state["theme"])
+st.markdown(make_css(PALETTE), unsafe_allow_html=True)
 
 
 def kpi_card(label: str, value, unit: str = "", sub: str = "", accent: str = "") -> str:
@@ -146,6 +208,12 @@ st.markdown(
 # ==================================================================
 
 with st.sidebar:
+    # Theme toggle
+    theme_label = "🌙 Switch to dark mode" if st.session_state["theme"] == "light" else "☀ Switch to light mode"
+    if st.button(theme_label, key="theme_toggle", use_container_width=True):
+        st.session_state["theme"] = "dark" if st.session_state["theme"] == "light" else "light"
+        st.rerun()
+
     st.markdown("### Data")
     uploaded = st.file_uploader(
         "Upload OCL/BRPL report (.xlsx)",
@@ -303,12 +371,13 @@ with tab_over:
             labels={"date": "", "count": "Vehicles", "status": "Status"},
         )
         fig.update_layout(
-            plot_bgcolor="#0b0d10", paper_bgcolor="#0b0d10",
-            font=dict(family="IBM Plex Sans", color="#d1d5db"),
+            plot_bgcolor=PALETTE["chart_bg"], paper_bgcolor=PALETTE["chart_bg"],
+            font=dict(family="IBM Plex Sans", color=PALETTE["chart_text"]),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
                         bgcolor="rgba(0,0,0,0)"),
             margin=dict(l=20, r=20, t=40, b=20), height=420,
-            xaxis=dict(gridcolor="#1f2328", showgrid=False), yaxis=dict(gridcolor="#1f2328"),
+            xaxis=dict(gridcolor=PALETTE["chart_grid"], showgrid=False),
+            yaxis=dict(gridcolor=PALETTE["chart_grid"]),
             bargap=0.15,
         )
         for t in fig.data:
@@ -318,13 +387,13 @@ with tab_over:
         st.markdown("## Utilization trend")
         fig2 = px.line(ds, x="date", y="utilization_pct", markers=True,
                        labels={"date": "", "utilization_pct": "Utilization %"})
-        fig2.update_traces(line_color="#60a5fa", marker=dict(size=6))
+        fig2.update_traces(line_color=PALETTE["chart_line"], marker=dict(size=6))
         fig2.update_layout(
-            plot_bgcolor="#0b0d10", paper_bgcolor="#0b0d10",
-            font=dict(family="IBM Plex Sans", color="#d1d5db"),
+            plot_bgcolor=PALETTE["chart_bg"], paper_bgcolor=PALETTE["chart_bg"],
+            font=dict(family="IBM Plex Sans", color=PALETTE["chart_text"]),
             margin=dict(l=20, r=20, t=20, b=20), height=260,
-            xaxis=dict(gridcolor="#1f2328", showgrid=False),
-            yaxis=dict(gridcolor="#1f2328", range=[0, 105]),
+            xaxis=dict(gridcolor=PALETTE["chart_grid"], showgrid=False),
+            yaxis=dict(gridcolor=PALETTE["chart_grid"], range=[0, 105]),
         )
         st.plotly_chart(fig2, use_container_width=True)
 
