@@ -390,7 +390,7 @@ with tab_veh:
 
         with col_dh:
             st.markdown("### Driver Home (DH)")
-            dh_df = analytics.vehicles_with_dh(daily)
+            dh_df = analytics.vehicles_with_dh(df)
             if dh_df.empty:
                 note("No DH days in this view.", "success")
             else:
@@ -401,7 +401,7 @@ with tab_veh:
 
         with col_dp:
             st.markdown("### Driver Problem (DP)")
-            dp_df = analytics.vehicles_with_dp(daily)
+            dp_df = analytics.vehicles_with_dp(df)
             if dp_df.empty:
                 note("No DP days in this view.", "success")
             else:
@@ -412,7 +412,7 @@ with tab_veh:
 
         with col_rm:
             st.markdown("### Repair & Maintenance (RM)")
-            rm_df = analytics.vehicles_with_rm(daily)
+            rm_df = analytics.vehicles_with_rm(df)
             if rm_df.empty:
                 note("No R&M days in this view.", "success")
             else:
