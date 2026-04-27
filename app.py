@@ -205,7 +205,56 @@ def make_css(p: dict) -> str:
   .stTabs [data-baseweb="tab"] {{ background: transparent; color: {p['text_muted']}; font-weight: 500; padding: 0.65rem 1.1rem; border: none; border-bottom: 2px solid transparent; white-space: nowrap; }}
   .stTabs [aria-selected="true"] {{ color: {p['text']} !important; border-bottom: 2px solid {p['tab_active']} !important; background: transparent !important; }}
 
+  /* ---- Dataframe / Data table (Glide DataGrid) ---- */
   .stDataFrame {{ border: 1px solid {p['border']}; border-radius: 6px; }}
+  .stDataFrame [data-testid="stDataFrameResizable"],
+  .stDataFrame > div,
+  div[data-testid="stDataFrame"] > div,
+  div[data-testid="stDataFrameResizable"] {{
+    background-color: {p['panel']} !important;
+  }}
+  .stDataFrame canvas {{
+    background-color: {p['panel']} !important;
+  }}
+  div[data-testid="stElementToolbar"],
+  div[data-testid="stElementToolbarButton"] {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+    border-color: {p['border']} !important;
+  }}
+  div[data-testid="stElementToolbarButton"] svg {{
+    fill: {p['text']} !important;
+    color: {p['text']} !important;
+  }}
+  div[role="tooltip"], div[data-testid="stTooltip"] {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+    border: 1px solid {p['border']} !important;
+  }}
+  div[data-baseweb="tooltip"] {{
+    background-color: {p['panel']} !important;
+    color: {p['text']} !important;
+    border: 1px solid {p['border']} !important;
+  }}
+  table {{ background-color: {p['panel']} !important; color: {p['text']} !important; }}
+  table th {{ background-color: {p['alert_bg']} !important; color: {p['text']} !important; border-color: {p['border']} !important; }}
+  table td {{ background-color: {p['panel']} !important; color: {p['text']} !important; border-color: {p['border']} !important; }}
+
+  /* ---- Expanders ---- */
+  details[data-testid="stExpander"] {{
+    background-color: {p['panel']} !important;
+    border: 1px solid {p['border']} !important;
+    border-radius: 6px;
+  }}
+  details[data-testid="stExpander"] summary {{
+    color: {p['text']} !important;
+    background-color: {p['panel']} !important;
+  }}
+
+  /* ---- Code blocks, links, captions ---- */
+  code, pre {{ background-color: {p['alert_bg']} !important; color: {p['text']} !important; }}
+  a {{ color: {p['accent_blue']} !important; }}
+  small, .caption, [data-testid="stCaptionContainer"] {{ color: {p['text_muted']} !important; }}
   [data-testid="stFileUploader"] section {{ background: {p['panel']}; border: 1px dashed {p['border_strong']}; border-radius: 6px; }}
   .stAlert {{ background: {p['alert_bg']}; border: 1px solid {p['border']}; border-radius: 6px; }}
 
