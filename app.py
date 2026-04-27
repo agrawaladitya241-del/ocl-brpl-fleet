@@ -227,7 +227,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-k1, k2, k3, k4, k5, k6 = st.columns(6)
+st.markdown("### Top-line metrics")
+k1, k2, k3, k4, k5 = st.columns(5)
 with k1:
     st.markdown(kpi_card("Total trips", f"{kpis['total_trips_month']:,}", accent="green",
                          sub="highlighted cells = routes"), unsafe_allow_html=True)
@@ -235,17 +236,41 @@ with k2:
     st.markdown(kpi_card("Avg days / trip", kpis["avg_days_per_trip"], accent="blue",
                          sub="working days ÷ trips"), unsafe_allow_html=True)
 with k3:
-    st.markdown(kpi_card("Drivers home (latest)", kpis["drivers_home"], accent="red"),
-                unsafe_allow_html=True)
-with k4:
-    st.markdown(kpi_card("Driver problems (latest)", kpis["drivers_problem"], accent="amber"),
-                unsafe_allow_html=True)
-with k5:
     st.markdown(kpi_card("Fleet utilization", kpis["fleet_util_pct"], unit="%", accent="blue",
                          sub="excl. accident, DP, R&M"), unsafe_allow_html=True)
-with k6:
-    st.markdown(kpi_card("Accident vehicles", kpis["accident_vehicles"], accent="purple"),
-                unsafe_allow_html=True)
+with k4:
+    st.markdown(kpi_card("Accident vehicles", kpis["accident_vehicles"], accent="purple",
+                         sub="grounded for month"), unsafe_allow_html=True)
+with k5:
+    st.markdown(kpi_card("Active trips today", kpis["active_trips"], accent="green",
+                         sub=f"of {kpis['total_vehicles']} vehicles"), unsafe_allow_html=True)
+
+st.markdown("### Day breakdown for this period")
+d1, d2, d3, d4 = st.columns(4)
+with d1:
+    st.markdown(
+        kpi_card("DH days", kpis["dh_days_month"], accent="red",
+                 sub="Driver Home (total this month)"),
+        unsafe_allow_html=True,
+    )
+with d2:
+    st.markdown(
+        kpi_card("DP days", kpis["dp_days_month"], accent="red",
+                 sub="Driver Problem (total this month)"),
+        unsafe_allow_html=True,
+    )
+with d3:
+    st.markdown(
+        kpi_card("R&M days", kpis["rm_days_month"], accent="purple",
+                 sub="Repair & Maintenance (total this month)"),
+        unsafe_allow_html=True,
+    )
+with d4:
+    st.markdown(
+        kpi_card("No-data days", kpis["no_data_days_month"], accent="amber",
+                 sub="blank cells (no entry)"),
+        unsafe_allow_html=True,
+    )
 
 # Data quality warnings
 warnings = analytics.data_quality_warnings(df_all)
@@ -352,6 +377,49 @@ with tab_veh:
                     "is_accident_vehicle": st.column_config.CheckboxColumn("Accident"),
                 },
             )
+
+        st.markdown("## Day breakdown per vehicle")
+        note(
+            "Vehicles broken down by their unproductive day counts. "
+            "<strong>DH</strong> = Driver Home · <strong>DP</strong> = Driver Problem · "
+            "<strong>RM</strong> = Repair & Maintenance.",
+            "info",
+        )
+
+        col_dh, col_dp, col_rm = st.columns(3)
+
+        with col_dh:
+            st.markdown("### Driver Home (DH)")
+            dh_df = analytics.vehicles_with_dh(daily)
+            if dh_df.empty:
+                note("No DH days in this view.", "success")
+            else:
+                dh_disp = dh_df.copy()
+                dh_disp["first_dh"] = dh_disp["first_dh"].dt.strftime("%d %b")
+                dh_disp["last_dh"] = dh_disp["last_dh"].dt.strftime("%d %b")
+                st.dataframe(dh_disp, use_container_width=True, hide_index=True)
+
+        with col_dp:
+            st.markdown("### Driver Problem (DP)")
+            dp_df = analytics.vehicles_with_dp(daily)
+            if dp_df.empty:
+                note("No DP days in this view.", "success")
+            else:
+                dp_disp = dp_df.copy()
+                dp_disp["first_dp"] = dp_disp["first_dp"].dt.strftime("%d %b")
+                dp_disp["last_dp"] = dp_disp["last_dp"].dt.strftime("%d %b")
+                st.dataframe(dp_disp, use_container_width=True, hide_index=True)
+
+        with col_rm:
+            st.markdown("### Repair & Maintenance (RM)")
+            rm_df = analytics.vehicles_with_rm(daily)
+            if rm_df.empty:
+                note("No R&M days in this view.", "success")
+            else:
+                rm_disp = rm_df.copy()
+                rm_disp["first_rm"] = rm_disp["first_rm"].dt.strftime("%d %b")
+                rm_disp["last_rm"] = rm_disp["last_rm"].dt.strftime("%d %b")
+                st.dataframe(rm_disp, use_container_width=True, hide_index=True)
 
         st.markdown("## All vehicles")
         st.dataframe(
