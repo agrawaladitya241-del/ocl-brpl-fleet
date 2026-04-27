@@ -324,6 +324,8 @@ def compute_kpis(df: pd.DataFrame) -> Dict:
             "accident_vehicles": 0, "latest_date": None,
             "total_trips_month": 0, "avg_days_per_trip": 0.0,
             "working_days_total": 0,
+            "dh_days_month": 0, "dp_days_month": 0,
+            "rm_days_month": 0, "no_data_days_month": 0,
         }
     df = df if "status" in df.columns else add_status_column(df)
     latest_date = df["date"].max()
@@ -333,6 +335,12 @@ def compute_kpis(df: pd.DataFrame) -> Dict:
     active_trips = int(latest["status"].isin(["TRIP", "ULP", "TNST"]).sum())
     drivers_home = int((latest["status"] == "DH").sum())
     drivers_problem = int((latest["status"] == "DP").sum())
+
+    # Monthly totals — sum across all vehicles + all days in this view
+    dh_days_month = int((df["status"] == "DH").sum())
+    dp_days_month = int((df["status"] == "DP").sum())
+    rm_days_month = int((df["status"] == "RM").sum())
+    no_data_days_month = int((df["status"] == "NO_DATA").sum())
 
     vs = vehicle_summary(df)
     accident_count = int(vs["is_accident_vehicle"].sum()) if not vs.empty else 0
@@ -368,7 +376,71 @@ def compute_kpis(df: pd.DataFrame) -> Dict:
         "total_trips_month": total_trips_month,
         "avg_days_per_trip": avg_days_per_trip,
         "working_days_total": working_days,
+        "dh_days_month": dh_days_month,
+        "dp_days_month": dp_days_month,
+        "rm_days_month": rm_days_month,
+        "no_data_days_month": no_data_days_month,
     }
+
+
+def vehicles_with_dh(df: pd.DataFrame) -> pd.DataFrame:
+    """Return vehicles that had any DH (Driver Home) days, with day count and dates."""
+    df = df if "status" in df.columns else add_status_column(df)
+    dh_cells = df[df["status"] == "DH"]
+    if dh_cells.empty:
+        return pd.DataFrame(columns=["vehicle", "contractor", "dh_days", "first_dh", "last_dh"])
+    grouped = (
+        dh_cells.groupby("vehicle")
+        .agg(
+            contractor=("contractor", "first"),
+            dh_days=("date", "count"),
+            first_dh=("date", "min"),
+            last_dh=("date", "max"),
+        )
+        .reset_index()
+        .sort_values("dh_days", ascending=False)
+    )
+    return grouped.reset_index(drop=True)
+
+
+def vehicles_with_dp(df: pd.DataFrame) -> pd.DataFrame:
+    """Return vehicles that had any DP (Driver Problem) days."""
+    df = df if "status" in df.columns else add_status_column(df)
+    dp_cells = df[df["status"] == "DP"]
+    if dp_cells.empty:
+        return pd.DataFrame(columns=["vehicle", "contractor", "dp_days", "first_dp", "last_dp"])
+    grouped = (
+        dp_cells.groupby("vehicle")
+        .agg(
+            contractor=("contractor", "first"),
+            dp_days=("date", "count"),
+            first_dp=("date", "min"),
+            last_dp=("date", "max"),
+        )
+        .reset_index()
+        .sort_values("dp_days", ascending=False)
+    )
+    return grouped.reset_index(drop=True)
+
+
+def vehicles_with_rm(df: pd.DataFrame) -> pd.DataFrame:
+    """Return vehicles that had any RM (Repair & Maintenance) days."""
+    df = df if "status" in df.columns else add_status_column(df)
+    rm_cells = df[df["status"] == "RM"]
+    if rm_cells.empty:
+        return pd.DataFrame(columns=["vehicle", "contractor", "rm_days", "first_rm", "last_rm"])
+    grouped = (
+        rm_cells.groupby("vehicle")
+        .agg(
+            contractor=("contractor", "first"),
+            rm_days=("date", "count"),
+            first_rm=("date", "min"),
+            last_rm=("date", "max"),
+        )
+        .reset_index()
+        .sort_values("rm_days", ascending=False)
+    )
+    return grouped.reset_index(drop=True)
 
 
 # ----------------------------------------------------------------------
